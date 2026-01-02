@@ -2,7 +2,7 @@
 
 **Professionally configured OPNsense for home network security.**
 
-[![OPNsense Version](https://img.shields.io/badge/OPNsense-25.7-blue)](https://opnsense.org/)
+[![OPNsense Version](https://img.shields.io/badge/OPNsense-Rolling%20Stable-blue)](https://opnsense.org/)
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange)](LICENSE)
 [![Download Config](https://img.shields.io/github/v/release/opensourcesecurity-inc/securenet?label=Download&color=ff6b35)](https://github.com/opensourcesecurity-inc/securenet/releases/latest)
 
@@ -48,6 +48,36 @@ Each segment is isolated by default and permitted traffic is explicitly defined.
 
 ---
 
+## OPNsense Version Strategy
+
+SecureNet follows a **rolling stable** OPNsense version model.
+
+All new SecureNet customers are required to run the **latest supported OPNsense release**. This ensures compatibility with core components such as Zenarmor and allows SecureNet to continuously validate security and performance against current upstream releases.
+
+### Update Process
+
+1. New OPNsense releases are first deployed and tested on internal and home SecureNet environments.
+2. Early validation continues with a limited set of active SecureNet deployments.
+3. After a minimum validation period, typically 30 days, broader customer upgrade guidance is published.
+
+This approach trades long-term version pinning for active validation and faster access to security improvements, while maintaining controlled rollout and documented upgrade paths.
+
+---
+
+## Relationship to SafeNet
+
+SecureNet **requires SafeNet** for VPN-enabled segments.
+
+SafeNet operates as an **upstream egress and privacy service**, not as a local firewall control. All SecureNet security enforcement occurs locally before traffic enters the SafeNet tunnel.
+
+- SecureNet remains the security authority
+- SafeNet provides encrypted egress and IP privacy
+- Traffic never bypasses SecureNet controls
+
+For SafeNet implementation details, see the SafeNet repository.
+
+---
+
 ## Repository Structure
 
 ```text
@@ -71,7 +101,7 @@ securenet/
     └── eap720-config.md        # TP-Link EAP720 SSID and segment mapping
 ```
 
-> Note: Configuration files are staged and will be published prior to launch.
+> Note: Some configuration files are staged and published as SecureNet approaches launch readiness.
 
 ---
 
@@ -123,26 +153,14 @@ OPNsense is free and open source. SecureNet configurations are published here. Y
 
 ---
 
-## Version Pinning
-
-SecureNet configurations are tied to specific OPNsense versions.
-
-| SecureNet Version | OPNsense Version | Status |
-|-------------------|------------------|--------|
-| v1.0 | 25.7.x | Launch release |
-
-Automatic upgrades are disabled. Each OPNsense update is validated in the Security Performance Lab before release.
-
----
-
 ## Related Repositories
 
 | Repository | Description |
 |------------|-------------|
-| aiw | AI Whitepaper and technical documentation |
-| safenet | VPN server configuration |
-| spl | Security Performance Lab data |
-| oss-blocklist | Threat intelligence aggregation |
+| [aiw](https://github.com/opensourcesecurity-inc/aiw) | AI Whitepaper and technical documentation |
+| [safenet](https://github.com/opensourcesecurity-inc/safenet) | SafeNet VPN server configuration |
+| [spl](https://github.com/opensourcesecurity-inc/spl) | Security Performance Lab data |
+| [oss-blocklist](https://github.com/opensourcesecurity-inc/oss-blocklist) | Threat intelligence aggregation |
 
 ---
 
