@@ -1,0 +1,407 @@
+<?xml version="1.0"?>
+<!-- 
+  SecureNet OS - Firewall Rules Excerpt
+  Source: OPNsense config.xml <filter> section
+  Purpose: Verification of published security architecture
+  
+  This is an excerpt for transparency. It cannot be directly imported.
+  See AIW (AI Whitepaper) for complete documentation.
+  https://github.com/opensourcesecurity-inc/aiw
+  
+  ARCHITECTURE OVERVIEW:
+  =====================
+  This firewall implements a segmented network with:
+  - LAN1 (opt3): Admin network - full access
+  - LAN2 (opt2): Secondary admin network - full access  
+  - SafeNetPort (opt4): Policy-routed through WireGuard VPN
+  - SafeNetVLAN (opt10): Policy-routed through WireGuard VPN
+  - IoT VLAN (opt6): Internet-only, blocked from internal networks
+  - Smart VLAN (opt7): Internet-only, blocked from internal networks
+  - Guest VLAN (opt8): Internet-only, blocked from internal networks
+  - Kids VLAN (opt9): Internet-only, blocked from internal networks
+  - SafeNet_Tunnel (opt11): WireGuard VPN interface
+  
+  THE 3-RULE ISOLATION PATTERN:
+  ============================
+  For untrusted VLANs (IoT, Smart, Guest, Kids), the following pattern is used:
+  
+  Rule 1 - ALLOW gateway access: Permits traffic to the VLAN's own gateway/subnet
+           This allows DHCP, DNS to firewall, and essential services
+           
+  Rule 2 - BLOCK RFC1918: Blocks all traffic to private IP ranges (10.x, 172.16.x, 192.168.x)
+           Uses the OSS_RFC1918_Networks alias
+           This prevents lateral movement between VLANs
+           
+  Rule 3 - ALLOW internet: Permits all remaining traffic (internet-bound)
+           Since RFC1918 is blocked, only public IPs are reachable
+  
+  This pattern provides isolation while maintaining internet access.
+-->
+
+<filter>
+  <!-- ============================================== -->
+  <!-- ADMIN NETWORKS - Full Access                   -->
+  <!-- ============================================== -->
+  
+  <!-- LAN2 (opt2) - Secondary Admin Network - Full Access -->
+  <rule uuid="7d8c1846-8ff2-4948-add7-c6e67a0a2a00">
+    <type>pass</type>
+    <interface>opt2</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>LAN2 Pass All</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt2</network>
+    </source>
+    <destination>
+      <any>1</any>
+    </destination>
+  </rule>
+  
+  <!-- LAN1 (opt3) - Primary Admin Network - Full Access -->
+  <rule uuid="a32e839a-d3e5-4141-9703-4e11f9324bf4">
+    <type>pass</type>
+    <interface>opt3</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>LAN1 Pass All Rule</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt3</network>
+    </source>
+    <destination>
+      <any>1</any>
+    </destination>
+  </rule>
+  
+  <!-- ============================================== -->
+  <!-- SAFENET PORT - VPN Policy Routing              -->
+  <!-- Traffic from this physical port routes through -->
+  <!-- the WireGuard tunnel (SafeNet_GW gateway)      -->
+  <!-- ============================================== -->
+  
+  <!-- SafeNetPort - Allow access to firewall services (DHCP, DNS, etc.) -->
+  <rule uuid="b1bafd3f-0fb3-4c04-b1d5-4fefc3d022aa">
+    <type>pass</type>
+    <interface>opt4</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Allow SafeNetPort to firewall</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt4</network>
+    </source>
+    <destination>
+      <network>(self)</network>
+    </destination>
+  </rule>
+  
+  <!-- SafeNetPort - Route ALL traffic through WireGuard VPN -->
+  <!-- The gateway directive forces policy-based routing -->
+  <rule uuid="c3010af3-e0e9-4a7d-b81a-cc33d89c5327">
+    <type>pass</type>
+    <interface>opt4</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Route SafeNetPort through VPN</descr>
+    <gateway>SafeNet_GW</gateway>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt4</network>
+    </source>
+    <destination>
+      <any>1</any>
+    </destination>
+  </rule>
+  
+  <!-- ============================================== -->
+  <!-- IoT VLAN (opt6) - 3-Rule Isolation Pattern     -->
+  <!-- Untrusted devices: cameras, smart plugs, etc.  -->
+  <!-- ============================================== -->
+  
+  <!-- IoT Rule 1: Allow intra-VLAN communication (gateway access) -->
+  <rule uuid="f4b8b98c-fa34-4744-be11-4cfd347d9323">
+    <type>pass</type>
+    <interface>opt6</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>IoT VLAN Gateway Pass</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt6</network>
+    </source>
+    <destination>
+      <network>opt6</network>
+    </destination>
+  </rule>
+  
+  <!-- IoT Rule 2: Block ALL internal/private networks -->
+  <rule uuid="63176f30-cbec-4672-ae9e-9f90b2f68ad1">
+    <type>block</type>
+    <interface>opt6</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>IoT VLAN Block Internal Networks</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt6</network>
+    </source>
+    <destination>
+      <address>OSS_RFC1918_Networks</address>
+    </destination>
+  </rule>
+  
+  <!-- IoT Rule 3: Allow internet access (only public IPs reachable) -->
+  <rule uuid="933d4439-f5a3-472a-bd1a-cd77976f1b16">
+    <type>pass</type>
+    <interface>opt6</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>IoT VLAN Pass All</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt6</network>
+    </source>
+    <destination>
+      <any>1</any>
+    </destination>
+  </rule>
+  
+  <!-- ============================================== -->
+  <!-- Smart VLAN (opt7) - 3-Rule Isolation Pattern   -->
+  <!-- Smart home devices: Sonos, Apple TV, etc.      -->
+  <!-- ============================================== -->
+  
+  <!-- Smart Rule 1: Allow gateway access -->
+  <rule uuid="7fcefa1a-6e8e-4778-baee-2dae6c5652c9">
+    <type>pass</type>
+    <interface>opt7</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Smart VLAN Gateway Access</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt7</network>
+    </source>
+    <destination>
+      <network>opt7</network>
+    </destination>
+  </rule>
+  
+  <!-- Smart Rule 2: Block ALL internal/private networks -->
+  <rule uuid="9780e2c5-69c2-4a1b-905d-f2b94f05be84">
+    <type>block</type>
+    <interface>opt7</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Smart VLAN  Block Internal Networks</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt7</network>
+    </source>
+    <destination>
+      <address>OSS_RFC1918_Networks</address>
+    </destination>
+  </rule>
+  
+  <!-- Smart Rule 3: Allow internet access -->
+  <rule uuid="4e9c986e-e8f9-47bc-8bd3-14c12cea3efb">
+    <type>pass</type>
+    <interface>opt7</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Smart VLAN Pass All</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt7</network>
+    </source>
+    <destination>
+      <any>1</any>
+    </destination>
+  </rule>
+  
+  <!-- ============================================== -->
+  <!-- Guest VLAN (opt8) - 3-Rule Isolation Pattern   -->
+  <!-- Visitors, untrusted users                      -->
+  <!-- ============================================== -->
+  
+  <!-- Guest Rule 1: Allow gateway access -->
+  <rule uuid="9dcc0310-2669-43d5-bf20-538f9354e77e">
+    <type>pass</type>
+    <interface>opt8</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Guest VLAN Gateway Pass</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt8</network>
+    </source>
+    <destination>
+      <network>opt8</network>
+    </destination>
+  </rule>
+  
+  <!-- Guest Rule 2: Block ALL internal/private networks -->
+  <rule uuid="44c6cb74-197e-4ced-b561-c2304f9e82ca">
+    <type>block</type>
+    <interface>opt8</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Guest VLAN Block Internal NEtworks</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt8</network>
+    </source>
+    <destination>
+      <address>OSS_RFC1918_Networks</address>
+    </destination>
+  </rule>
+  
+  <!-- Guest Rule 3: Allow internet access -->
+  <rule uuid="99f9b4ec-fb24-4c6e-8439-7afc678884dc">
+    <type>pass</type>
+    <interface>opt8</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Guest VLAN Pass All</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt8</network>
+    </source>
+    <destination>
+      <any>1</any>
+    </destination>
+  </rule>
+  
+  <!-- ============================================== -->
+  <!-- Kids VLAN (opt9) - 3-Rule Isolation Pattern    -->
+  <!-- Children's devices with content filtering      -->
+  <!-- ============================================== -->
+  
+  <!-- Kids Rule 1: Allow gateway access -->
+  <rule uuid="d93a061e-fb5a-433c-99c3-84a491231df3">
+    <type>pass</type>
+    <interface>opt9</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Kids VLAN Gateway Access</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt9</network>
+    </source>
+    <destination>
+      <network>opt9</network>
+    </destination>
+  </rule>
+  
+  <!-- Kids Rule 2: Block ALL internal/private networks -->
+  <rule uuid="93e86592-a35b-44f1-b331-c4dc0a3623a6">
+    <type>block</type>
+    <interface>opt9</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Kids VLAN Block Internal Networks</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt9</network>
+    </source>
+    <destination>
+      <address>OSS_RFC1918_Networks</address>
+    </destination>
+  </rule>
+  
+  <!-- Kids Rule 3: Allow internet access -->
+  <rule uuid="959d0a06-0ef7-4860-bcc8-2bf20660eb29">
+    <type>pass</type>
+    <interface>opt9</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Kids VLAN Pass All</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt9</network>
+    </source>
+    <destination>
+      <any>1</any>
+    </destination>
+  </rule>
+  
+  <!-- ============================================== -->
+  <!-- SAFENET VLAN (opt10) - VPN Policy Routing      -->
+  <!-- VLAN-based SafeNet segment (alternative to     -->
+  <!-- physical port approach)                        -->
+  <!-- ============================================== -->
+  
+  <!-- SafeNetVLAN - Allow access to firewall services -->
+  <rule uuid="c45720db-4a0c-491a-820a-10dad4ee4f0b">
+    <type>pass</type>
+    <interface>opt10</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Allow SafeNetVLAN to firewall</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt10</network>
+    </source>
+    <destination>
+      <network>(self)</network>
+    </destination>
+  </rule>
+  
+  <!-- SafeNetVLAN - Route ALL traffic through WireGuard VPN -->
+  <rule uuid="12b697f2-7036-4bc6-ba7e-233c6561cab7">
+    <type>pass</type>
+    <interface>opt10</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Route SafeNetVLAN through VPN</descr>
+    <gateway>SafeNet_GW</gateway>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <network>opt10</network>
+    </source>
+    <destination>
+      <any>1</any>
+    </destination>
+  </rule>
+  
+  <!-- ============================================== -->
+  <!-- VPN TUNNEL INTERFACE (opt11)                   -->
+  <!-- Allow return traffic from WireGuard tunnel     -->
+  <!-- ============================================== -->
+  
+  <rule uuid="568796e7-6a78-4913-b209-60fdd8ab15a4">
+    <type>pass</type>
+    <interface>opt11</interface>
+    <ipprotocol>inet</ipprotocol>
+    <statetype>keep state</statetype>
+    <descr>Allow all traffic through VPN tunnel</descr>
+    <direction>in</direction>
+    <quick>1</quick>
+    <source>
+      <any>1</any>
+    </source>
+    <destination>
+      <any>1</any>
+    </destination>
+  </rule>
+</filter>

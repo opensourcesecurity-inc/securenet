@@ -1,0 +1,299 @@
+<?xml version="1.0"?>
+<!-- 
+  SecureNet OS - Dnsmasq DHCP Excerpt
+  Source: OPNsense config.xml <dnsmasq> section
+  Purpose: Verification of published security architecture
+  
+  This is an excerpt for transparency. It cannot be directly imported.
+  See AIW (AI Whitepaper) for complete documentation.
+  https://github.com/opensourcesecurity-inc/aiw
+  
+  REDACTIONS APPLIED:
+  - Static MAC reservations → [MAC_REDACTED] (none present)
+  
+  DHCP ARCHITECTURE:
+  =================
+  Dnsmasq provides DHCP services across all network segments.
+  DNS is handled separately by Unbound (port 0 = disabled in dnsmasq).
+  
+  DHCP RANGES PER INTERFACE:
+    Admin Networks:
+      - LAN1 (opt3): 192.168.1.100-200 (101 addresses)
+      - LAN2 (opt2): 192.168.2.100-200 (101 addresses)
+    
+    Isolated VLANs:
+      - IoT (opt6):   192.168.20.100-200 (101 addresses)
+      - Smart (opt7): 192.168.30.100-200 (101 addresses)
+      - Guest (opt8): 192.168.40.100-200 (101 addresses)
+      - Kids (opt9):  192.168.50.100-200 (101 addresses)
+    
+    SafeNet (VPN-routed):
+      - SafeNetPort (opt4):  10.70.70.100-200 (101 addresses)
+      - SafeNetVLAN (opt10): 10.60.60.100-200 (101 addresses)
+  
+  SAFENET DNS CONFIGURATION:
+  =========================
+  The SafeNet interfaces (opt4, opt10) use DHCP Option 6 (DNS servers)
+  to push 10.200.0.1 as the DNS server. This is the VPN provider's DNS
+  which ensures DNS queries are also tunneled through the VPN.
+  
+  This is critical for privacy - if SafeNet devices used the local
+  Unbound DNS, their DNS queries would leak outside the VPN tunnel.
+-->
+
+<dnsmasq version="1.0.8">
+  <enable>1</enable>
+  <regdhcp>0</regdhcp>
+  <regdhcpstatic>0</regdhcpstatic>
+  <dhcpfirst>0</dhcpfirst>
+  <strict_order>0</strict_order>
+  <domain_needed>0</domain_needed>
+  <no_private_reverse>0</no_private_reverse>
+  <no_resolv>0</no_resolv>
+  <log_queries>0</log_queries>
+  <no_hosts>0</no_hosts>
+  <strictbind>0</strictbind>
+  <dnssec>0</dnssec>
+  <regdhcpdomain/>
+  <!-- Interfaces where DHCP is served -->
+  <interface>opt8,opt6,opt9,opt3,opt2,opt4,opt10,opt7</interface>
+  <!-- Port 0 = DNS disabled, handled by Unbound -->
+  <port>0</port>
+  <dns_forward_max/>
+  <cache_size/>
+  <local_ttl/>
+  <add_mac/>
+  <add_subnet>0</add_subnet>
+  <strip_subnet>0</strip_subnet>
+  
+  <dhcp>
+    <no_interface/>
+    <fqdn>1</fqdn>
+    <domain/>
+    <local>1</local>
+    <lease_max/>
+    <authoritative>1</authoritative>
+    <default_fw_rules>1</default_fw_rules>
+    <reply_delay/>
+    <enable_ra>0</enable_ra>
+    <nosync>0</nosync>
+  </dhcp>
+  
+  <no_ident>1</no_ident>
+  
+  <!-- ============================================== -->
+  <!-- DHCP RANGES                                    -->
+  <!-- ============================================== -->
+  
+  <!-- LAN1 - Primary Admin Network -->
+  <dhcp_ranges uuid="7ee8923c-c068-45f8-bc90-98916995d568">
+    <interface>opt3</interface>
+    <set_tag/>
+    <start_addr>192.168.1.100</start_addr>
+    <end_addr>192.168.1.200</end_addr>
+    <subnet_mask/>
+    <constructor/>
+    <mode/>
+    <prefix_len/>
+    <lease_time/>
+    <domain_type>range</domain_type>
+    <domain/>
+    <nosync>0</nosync>
+    <ra_mode/>
+    <ra_priority/>
+    <ra_mtu/>
+    <ra_interval/>
+    <ra_router_lifetime/>
+    <description>LAN1</description>
+  </dhcp_ranges>
+  
+  <!-- IoT VLAN -->
+  <dhcp_ranges uuid="b48d8d4e-6964-45ac-be1b-515a8bbd1cec">
+    <interface>opt6</interface>
+    <set_tag/>
+    <start_addr>192.168.20.100</start_addr>
+    <end_addr>192.168.20.200</end_addr>
+    <subnet_mask/>
+    <constructor/>
+    <mode/>
+    <prefix_len/>
+    <lease_time/>
+    <domain_type>range</domain_type>
+    <domain/>
+    <nosync>0</nosync>
+    <ra_mode/>
+    <ra_priority/>
+    <ra_mtu/>
+    <ra_interval/>
+    <ra_router_lifetime/>
+    <description>IoT VLAN DHCP Range</description>
+  </dhcp_ranges>
+  
+  <!-- Smart VLAN -->
+  <dhcp_ranges uuid="824c779f-f428-4df1-948a-b0faf36a5721">
+    <interface>opt7</interface>
+    <set_tag/>
+    <start_addr>192.168.30.100</start_addr>
+    <end_addr>192.168.30.200</end_addr>
+    <subnet_mask/>
+    <constructor/>
+    <mode/>
+    <prefix_len/>
+    <lease_time/>
+    <domain_type>range</domain_type>
+    <domain/>
+    <nosync>0</nosync>
+    <ra_mode/>
+    <ra_priority/>
+    <ra_mtu/>
+    <ra_interval/>
+    <ra_router_lifetime/>
+    <description>Smart VLAN DHCP Range</description>
+  </dhcp_ranges>
+  
+  <!-- Guest VLAN -->
+  <dhcp_ranges uuid="4f687091-5766-4d45-a697-0c1da190091b">
+    <interface>opt8</interface>
+    <set_tag/>
+    <start_addr>192.168.40.100</start_addr>
+    <end_addr>192.168.40.200</end_addr>
+    <subnet_mask/>
+    <constructor/>
+    <mode/>
+    <prefix_len/>
+    <lease_time/>
+    <domain_type>range</domain_type>
+    <domain/>
+    <nosync>0</nosync>
+    <ra_mode/>
+    <ra_priority/>
+    <ra_mtu/>
+    <ra_interval/>
+    <ra_router_lifetime/>
+    <description>Guest VLAN DHCP</description>
+  </dhcp_ranges>
+  
+  <!-- Kids VLAN -->
+  <dhcp_ranges uuid="a634910e-5dd5-4973-a974-56557da048e5">
+    <interface>opt9</interface>
+    <set_tag/>
+    <start_addr>192.168.50.100</start_addr>
+    <end_addr>192.168.50.200</end_addr>
+    <subnet_mask/>
+    <constructor/>
+    <mode/>
+    <prefix_len/>
+    <lease_time/>
+    <domain_type>range</domain_type>
+    <domain/>
+    <nosync>0</nosync>
+    <ra_mode/>
+    <ra_priority/>
+    <ra_mtu/>
+    <ra_interval/>
+    <ra_router_lifetime/>
+    <description>Kids VLAN DHCP Range</description>
+  </dhcp_ranges>
+  
+  <!-- SafeNet Port - Physical VPN-routed port -->
+  <dhcp_ranges uuid="d071a958-6b5e-414c-af13-96320f2460fe">
+    <interface>opt4</interface>
+    <set_tag/>
+    <start_addr>10.70.70.100</start_addr>
+    <end_addr>10.70.70.200</end_addr>
+    <subnet_mask/>
+    <constructor/>
+    <mode/>
+    <prefix_len/>
+    <lease_time/>
+    <domain_type>range</domain_type>
+    <domain/>
+    <nosync>0</nosync>
+    <ra_mode/>
+    <ra_priority/>
+    <ra_mtu/>
+    <ra_interval/>
+    <ra_router_lifetime/>
+    <description>SafeNet Port DHCP Range</description>
+  </dhcp_ranges>
+  
+  <!-- LAN2 - Secondary Admin Network -->
+  <dhcp_ranges uuid="0ebdfcd5-7e22-45d9-9f37-dc1b3deb065c">
+    <interface>opt2</interface>
+    <set_tag/>
+    <start_addr>192.168.2.100</start_addr>
+    <end_addr>192.168.2.200</end_addr>
+    <subnet_mask/>
+    <constructor/>
+    <mode/>
+    <prefix_len/>
+    <lease_time/>
+    <domain_type>range</domain_type>
+    <domain/>
+    <nosync>0</nosync>
+    <ra_mode/>
+    <ra_priority/>
+    <ra_mtu/>
+    <ra_interval/>
+    <ra_router_lifetime/>
+    <description>LAN2</description>
+  </dhcp_ranges>
+  
+  <!-- SafeNet VLAN - VLAN-based VPN-routed segment -->
+  <dhcp_ranges uuid="a37acbbb-1fe0-4d97-9bdc-92c33b714e6c">
+    <interface>opt10</interface>
+    <set_tag/>
+    <start_addr>10.60.60.100</start_addr>
+    <end_addr>10.60.60.200</end_addr>
+    <subnet_mask/>
+    <constructor/>
+    <mode/>
+    <prefix_len/>
+    <lease_time/>
+    <domain_type>range</domain_type>
+    <domain/>
+    <nosync>0</nosync>
+    <ra_mode/>
+    <ra_priority/>
+    <ra_mtu/>
+    <ra_interval/>
+    <ra_router_lifetime/>
+    <description>SafeNet VLAN DHCP Range</description>
+  </dhcp_ranges>
+  
+  <!-- ============================================== -->
+  <!-- DHCP OPTIONS                                   -->
+  <!-- Option 6 = DNS Server assignment               -->
+  <!-- SafeNet segments use VPN provider's DNS        -->
+  <!-- ============================================== -->
+  
+  <!-- SafeNet Port DNS - Routes DNS through VPN tunnel -->
+  <dhcp_options uuid="0f3685d2-0171-4a7e-b5a0-449818e42ba7">
+    <type>set</type>
+    <!-- Option 6 = DNS servers -->
+    <option>6</option>
+    <option6/>
+    <interface>opt4</interface>
+    <tag/>
+    <set_tag/>
+    <!-- VPN provider's DNS server inside the tunnel -->
+    <value>10.200.0.1</value>
+    <force>0</force>
+    <description>SafeNet Port DNS via Wireguard Tunnel</description>
+  </dhcp_options>
+  
+  <!-- SafeNet VLAN DNS - Routes DNS through VPN tunnel -->
+  <dhcp_options uuid="74028fb8-a4ca-4297-bfca-156aa60435c6">
+    <type>set</type>
+    <!-- Option 6 = DNS servers -->
+    <option>6</option>
+    <option6/>
+    <interface>opt10</interface>
+    <tag/>
+    <set_tag/>
+    <!-- VPN provider's DNS server inside the tunnel -->
+    <value>10.200.0.1</value>
+    <force>0</force>
+    <description>SafeNet VLAN DNS via WireGuard Tunnel</description>
+  </dhcp_options>
+</dnsmasq>

@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!-- 
+  SecureNet OS - Firewall Aliases Excerpt
+  Source: OPNsense config.xml <OPNsense><Firewall><Alias><aliases> section
+  Purpose: Verification of published security architecture
+  
+  This is an excerpt for transparency. It cannot be directly imported.
+  See AIW (AI Whitepaper) for complete documentation.
+  https://github.com/opensourcesecurity-inc/aiw
+  
+  ALIAS ARCHITECTURE:
+  ==================
+  Aliases are reusable network/host definitions used in firewall rules.
+  
+  OSS_RFC1918_Networks:
+    - Contains all private IP ranges defined in RFC1918
+    - Used in the 3-rule isolation pattern to block inter-VLAN traffic
+    - Includes: 192.168.0.0/16, 172.16.0.0/12, 10.0.0.0/8
+  
+  OSS_blocklist:
+    - URL-based alias that fetches IP blocklist from OSS server
+    - Auto-updates on schedule
+    - Used to block known malicious IPs at the firewall level
+-->
+
+<aliases>
+  <!-- ============================================== -->
+  <!-- RFC1918 Private Networks Alias                 -->
+  <!-- Used to isolate VLANs from each other          -->
+  <!-- Any traffic to these ranges from isolated      -->
+  <!-- VLANs will be blocked                          -->
+  <!-- ============================================== -->
+  <alias uuid="4dd9f4b0-ef4c-4f31-a2a9-3ac2f62d86d3">
+    <enabled>1</enabled>
+    <n>OSS_RFC1918_Networks</n>
+    <type>network</type>
+    <path_expression/>
+    <proto/>
+    <interface/>
+    <counters>0</counters>
+    <updatefreq/>
+    <!-- 
+      RFC1918 defines these three private address ranges:
+      - 192.168.0.0/16 = 192.168.0.0 - 192.168.255.255 (Class C private)
+      - 172.16.0.0/12  = 172.16.0.0 - 172.31.255.255 (Class B private)
+      - 10.0.0.0/8     = 10.0.0.0 - 10.255.255.255 (Class A private)
+    -->
+    <content>192.168.0.0/16
+172.16.0.0/12
+10.0.0.0/8</content>
+    <password/>
+    <username/>
+    <authtype/>
+    <expire/>
+    <categories/>
+    <description>RFC1918_Networks</description>
+  </alias>
+  
+  <!-- ============================================== -->
+  <!-- OSS Curated IP Blocklist                       -->
+  <!-- URL-type alias - automatically fetched/updated -->
+  <!-- Contains known malicious IPs                   -->
+  <!-- ============================================== -->
+  <alias uuid="0a8a2fc7-4db5-4a96-9236-76e48215ebed">
+    <enabled>1</enabled>
+    <n>OSS_blocklist</n>
+    <type>url</type>
+    <path_expression/>
+    <proto/>
+    <interface/>
+    <counters>0</counters>
+    <updatefreq/>
+    <!-- 
+      This URL points to the OSS-curated IP blocklist
+      The firewall periodically fetches this list and 
+      automatically updates the alias contents
+    -->
+    <content>http://oss-blocklist.net/ip/ip-combined.txt</content>
+    <password/>
+    <username/>
+    <authtype/>
+    <expire/>
+    <categories/>
+    <description>OSS Curated Blocklist</description>
+  </alias>
+</aliases>

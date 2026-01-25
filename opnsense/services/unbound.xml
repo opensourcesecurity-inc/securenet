@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<!-- 
+  SecureNet OS - Unbound DNS Excerpt
+  Source: OPNsense config.xml <OPNsense><unboundplus> section
+  Purpose: Verification of published security architecture
+  
+  This is an excerpt for transparency. It cannot be directly imported.
+  See AIW (AI Whitepaper) for complete documentation.
+  https://github.com/opensourcesecurity-inc/aiw
+  
+  DNS ARCHITECTURE:
+  ================
+  Unbound provides recursive DNS resolution with:
+  - DNSSEC validation for query authenticity
+  - DNS-over-TLS (DoT) to upstream resolvers for privacy
+  - DNS blocklist integration for ad/malware blocking
+  
+  UPSTREAM RESOLVERS (DoT):
+    - Quad9 (9.9.9.9:853) - Security-focused, malware blocking
+    - Cloudflare (1.1.1.1:853) - Privacy-focused, fast
+  
+  BLOCKLIST INTEGRATION:
+    - OSS curated DNS blocklist for ad/tracker/malware domains
+    - Returns NXDOMAIN for blocked queries (no fake IP)
+    - Whitelist for false-positive management
+  
+  LISTENING INTERFACES:
+    The DNS server listens on admin and isolated VLANs:
+    - opt3 (LAN1), opt2 (LAN2) - Admin networks
+    - opt6 (IoT), opt7 (Smart), opt8 (Guest), opt9 (Kids) - Isolated VLANs
+    
+  NOTE: SafeNet interfaces (opt4, opt10) are NOT listed because
+  SafeNet traffic uses the VPN provider's DNS (10.200.0.1) instead.
+  This ensures DNS queries are also tunneled through the VPN.
+-->
+
+<unboundplus version="1.0.12">
+  <general>
+    <enabled>1</enabled>
+    <port>53</port>
+    <stats>1</stats>
+    <!-- 
+      Active interfaces - DNS available on these networks
+      SafeNet interfaces excluded - they use VPN DNS instead
+    -->
+    <active_interface>opt8,opt6,opt9,opt3,opt2,opt7</active_interface>
+    <!-- DNSSEC enabled - validates DNS responses cryptographically -->
+    <dnssec>1</dnssec>
+    <dns64>0</dns64>
+    <dns64prefix/>
+    <noarecords>0</noarecords>
+    <regdhcp>0</regdhcp>
+    <regdhcpdomain/>
+    <regdhcpstatic>0</regdhcpstatic>
+    <noreglladdr6>0</noreglladdr6>
+    <noregrecords>0</noregrecords>
+    <txtsupport>0</txtsupport>
+    <cacheflush>0</cacheflush>
+    <local_zone_type>transparent</local_zone_type>
+    <outgoing_interface/>
+    <enable_wpad>0</enable_wpad>
+  </general>
+  
+  <advanced>
+    <hideidentity>0</hideidentity>
+    <hideversion>0</hideversion>
+    <prefetch>0</prefetch>
+    <prefetchkey>0</prefetchkey>
+    <dnssecstripped>0</dnssecstripped>
+    <!-- Aggressive NSEC - improves DNSSEC performance -->
+    <aggressivensec>1</aggressivensec>
+    <serveexpired>0</serveexpired>
+    <serveexpiredreplyttl/>
+    <serveexpiredttl/>
+    <serveexpiredttlreset>0</serveexpiredttlreset>
+    <serveexpiredclienttimeout/>
+    <qnameminstrict>0</qnameminstrict>
+    <extendedstatistics>0</extendedstatistics>
+    <logqueries>0</logqueries>
+    <logreplies>0</logreplies>
+    <logtagqueryreply>0</logtagqueryreply>
+    <logservfail>0</logservfail>
+    <loglocalactions>0</loglocalactions>
+    <logverbosity>1</logverbosity>
+    <valloglevel>0</valloglevel>
+    <privatedomain/>
+    <!-- RFC1918 and other private ranges - prevents DNS rebinding attacks -->
+    <privateaddress>0.0.0.0/8,10.0.0.0/8,100.64.0.0/10,169.254.0.0/16,172.16.0.0/12,192.0.2.0/24,192.168.0.0/16,198.18.0.0/15,198.51.100.0/24,203.0.113.0/24,233.252.0.0/24,::1/128,2001:db8::/32,fc00::/8,fd00::/8,fe80::/10</privateaddress>
+    <insecuredomain/>
+    <msgcachesize/>
+    <rrsetcachesize/>
+    <outgoingnumtcp/>
+    <incomingnumtcp/>
+    <numqueriesperthread/>
+    <outgoingrange/>
+    <jostletimeout/>
+    <discardtimeout/>
+    <cachemaxttl/>
+    <cachemaxnegativettl/>
+    <cacheminttl/>
+    <infrahostttl/>
+    <infrakeepprobing>0</infrakeepprobing>
+    <infracachenumhosts/>
+    <unwantedreplythreshold/>
+  </advanced>
+  
+  <acls>
+    <default_action>allow</default_action>
+  </acls>
+  
+  <!-- ============================================== -->
+  <!-- DNS BLOCKLIST CONFIGURATION                    -->
+  <!-- Blocks ads, trackers, malware at DNS level     -->
+  <!-- ============================================== -->
+  <dnsbl>
+    <enabled>1</enabled>
+    <safesearch>0</safesearch>
+    <type/>
+    <!-- Primary blocklist - OSS curated combined list -->
+    <lists>http://oss-blocklist.net/dns/dns-combined.txt</lists>
+    <!-- Whitelist for false positives -->
+    <whitelists>http://oss-blocklist.net/dns/dns-whitelist.txt</whitelists>
+    <!-- Redundant blocklist entry -->
+    <blocklists>http://oss-blocklist.net/dns/dns-combined.txt</blocklists>
+    <wildcards/>
+    <address/>
+    <!-- Return NXDOMAIN for blocked queries (no fake IP) -->
+    <nxdomain>1</nxdomain>
+  </dnsbl>
+  
+  <forwarding>
+    <enabled>0</enabled>
+  </forwarding>
+  
+  <!-- ============================================== -->
+  <!-- DNS-OVER-TLS (DoT) UPSTREAM SERVERS            -->
+  <!-- Encrypts DNS queries to upstream resolvers     -->
+  <!-- Port 853 = standard DoT port                   -->
+  <!-- ============================================== -->
+  <dots>
+    <!-- Quad9 - Security-focused DNS with malware blocking -->
+    <dot uuid="28e762de-4266-42a5-86a5-7f14454d4b55">
+      <enabled>1</enabled>
+      <type>dot</type>
+      <domain/>
+      <server>9.9.9.9</server>
+      <port>853</port>
+      <!-- TLS certificate verification hostname -->
+      <verify>dns.quad9.net</verify>
+      <forward_tcp_upstream>0</forward_tcp_upstream>
+      <forward_first>0</forward_first>
+      <description>Quad9 DoT</description>
+    </dot>
+    
+    <!-- Cloudflare - Privacy-focused, fast DNS -->
+    <dot uuid="da55c798-bb3c-4114-9922-320dfec1cd78">
+      <enabled>1</enabled>
+      <type>dot</type>
+      <domain/>
+      <server>1.1.1.1</server>
+      <port>853</port>
+      <!-- TLS certificate verification hostname -->
+      <verify>cloudflare-dns.com</verify>
+      <forward_tcp_upstream>0</forward_tcp_upstream>
+      <forward_first>0</forward_first>
+      <description>Cloudflare DoT</description>
+    </dot>
+  </dots>
+  
+  <hosts/>
+  <aliases/>
+</unboundplus>

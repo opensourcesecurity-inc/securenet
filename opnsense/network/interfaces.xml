@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+<!-- 
+  SecureNet OS - Interfaces Excerpt
+  Source: OPNsense config.xml <interfaces> section
+  Purpose: Verification of published security architecture
+  
+  This is an excerpt for transparency. It cannot be directly imported.
+  See AIW (AI Whitepaper) for complete documentation.
+  https://github.com/opensourcesecurity-inc/aiw
+  
+  REDACTIONS APPLIED:
+  - Public WAN IPs → [WAN_IP_REDACTED]
+  - MAC addresses → [MAC_REDACTED] (none present in this config)
+  
+  INTERFACE ARCHITECTURE:
+  ======================
+  Physical Ports (Protectli Vault - 4-port Intel i226):
+    - igc0 = LAN1 trunk port (carries VLANs 20, 30, 40, 50, 60)
+    - igc1 = WAN (DHCP from ISP)
+    - igc2 = SafeNetPort (dedicated VPN-routed port)
+    - igc3 = LAN2 (secondary admin network)
+  
+  VLAN Interfaces:
+    - vlan020 = IoT VLAN (192.168.20.0/24)
+    - vlan030 = Smart VLAN (192.168.30.0/24)
+    - vlan040 = Guest VLAN (192.168.40.0/24)
+    - vlan050 = Kids VLAN (192.168.50.0/24)
+    - vlan060 = SafeNet VLAN (10.60.60.0/24)
+  
+  Virtual Interfaces:
+    - wg1 = WireGuard tunnel interface (SafeNet_Tunnel)
+    - wireguard = WireGuard group interface
+    - lo0 = Loopback
+  
+  SUBNET STRUCTURE:
+    Admin Networks:
+      - 192.168.1.0/24 (LAN1) - Full access
+      - 192.168.2.0/24 (LAN2) - Full access
+    
+    Isolated VLANs:
+      - 192.168.20.0/24 (IoT) - Internet only
+      - 192.168.30.0/24 (Smart) - Internet only
+      - 192.168.40.0/24 (Guest) - Internet only
+      - 192.168.50.0/24 (Kids) - Internet only
+    
+    SafeNet (VPN-routed):
+      - 10.70.70.0/24 (SafeNetPort) - Physical port
+      - 10.60.60.0/24 (SafeNetVLAN) - VLAN-based
+-->
+
+<interfaces>
+  <!-- ============================================== -->
+  <!-- WAN Interface - ISP Connection                 -->
+  <!-- Physical port: igc1                            -->
+  <!-- ============================================== -->
+  <wan>
+    <if>igc1</if>
+    <descr/>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+    <blockpriv>1</blockpriv>
+    <blockbogons>1</blockbogons>
+    <!-- DHCP from ISP - no static IP configured -->
+    <ipaddr>dhcp</ipaddr>
+    <dhcphostname/>
+    <alias-address/>
+    <alias-subnet>32</alias-subnet>
+    <dhcprejectfrom/>
+    <adv_dhcp_pt_timeout/>
+    <adv_dhcp_pt_retry/>
+    <adv_dhcp_pt_select_timeout/>
+    <adv_dhcp_pt_reboot/>
+    <adv_dhcp_pt_backoff_cutoff/>
+    <adv_dhcp_pt_initial_interval/>
+    <adv_dhcp_pt_values>SavedCfg</adv_dhcp_pt_values>
+    <adv_dhcp_send_options/>
+    <adv_dhcp_request_options/>
+    <adv_dhcp_required_options/>
+    <adv_dhcp_option_modifiers/>
+    <adv_dhcp_config_advanced/>
+    <adv_dhcp_config_file_override/>
+    <adv_dhcp_config_file_override_path/>
+  </wan>
+  
+  <!-- ============================================== -->
+  <!-- Loopback Interface                             -->
+  <!-- System internal - auto-configured              -->
+  <!-- ============================================== -->
+  <lo0>
+    <internal_dynamic>1</internal_dynamic>
+    <descr>Loopback</descr>
+    <enable>1</enable>
+    <if>lo0</if>
+    <ipaddr>127.0.0.1</ipaddr>
+    <ipaddrv6>::1</ipaddrv6>
+    <subnet>8</subnet>
+    <subnetv6>128</subnetv6>
+    <type>none</type>
+    <virtual>1</virtual>
+  </lo0>
+  
+  <!-- ============================================== -->
+  <!-- LAN2 - Secondary Admin Network                 -->
+  <!-- Physical port: igc3                            -->
+  <!-- Full network access (no isolation)             -->
+  <!-- ============================================== -->
+  <opt2>
+    <if>igc3</if>
+    <descr>LAN2</descr>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+    <ipaddr>192.168.2.1</ipaddr>
+    <subnet>24</subnet>
+  </opt2>
+  
+  <!-- ============================================== -->
+  <!-- LAN1 - Primary Admin Network / VLAN Trunk      -->
+  <!-- Physical port: igc0                            -->
+  <!-- Full network access (no isolation)             -->
+  <!-- Also serves as trunk port for all VLANs        -->
+  <!-- ============================================== -->
+  <opt3>
+    <if>igc0</if>
+    <descr>LAN1</descr>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+    <ipaddr>192.168.1.1</ipaddr>
+    <subnet>24</subnet>
+  </opt3>
+  
+  <!-- ============================================== -->
+  <!-- SafeNetPort - Dedicated VPN-Routed Physical    -->
+  <!-- Physical port: igc2                            -->
+  <!-- All traffic policy-routed through WireGuard    -->
+  <!-- Uses 10.x addressing to distinguish from LAN   -->
+  <!-- ============================================== -->
+  <opt4>
+    <if>igc2</if>
+    <descr>SafeNetPort</descr>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+    <ipaddr>10.70.70.1</ipaddr>
+    <subnet>24</subnet>
+  </opt4>
+  
+  <!-- ============================================== -->
+  <!-- IoT VLAN - Untrusted Device Isolation          -->
+  <!-- VLAN 20 on igc0 trunk                          -->
+  <!-- Internet-only access via 3-rule pattern        -->
+  <!-- ============================================== -->
+  <opt6>
+    <if>vlan020</if>
+    <descr>IoTVLAN</descr>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+    <ipaddr>192.168.20.1</ipaddr>
+    <subnet>24</subnet>
+  </opt6>
+  
+  <!-- ============================================== -->
+  <!-- Smart VLAN - Smart Home Devices                -->
+  <!-- VLAN 30 on igc0 trunk                          -->
+  <!-- Internet-only access via 3-rule pattern        -->
+  <!-- ============================================== -->
+  <opt7>
+    <if>vlan030</if>
+    <descr>SmartVLAN</descr>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+    <ipaddr>192.168.30.1</ipaddr>
+    <subnet>24</subnet>
+  </opt7>
+  
+  <!-- ============================================== -->
+  <!-- Guest VLAN - Visitor Access                    -->
+  <!-- VLAN 40 on igc0 trunk                          -->
+  <!-- Internet-only access via 3-rule pattern        -->
+  <!-- ============================================== -->
+  <opt8>
+    <if>vlan040</if>
+    <descr>GuestVLAN</descr>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+    <ipaddr>192.168.40.1</ipaddr>
+    <subnet>24</subnet>
+  </opt8>
+  
+  <!-- ============================================== -->
+  <!-- Kids VLAN - Children's Devices                 -->
+  <!-- VLAN 50 on igc0 trunk                          -->
+  <!-- Internet-only access via 3-rule pattern        -->
+  <!-- Content filtering can be applied here          -->
+  <!-- ============================================== -->
+  <opt9>
+    <if>vlan050</if>
+    <descr>KidsVLAN</descr>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+    <ipaddr>192.168.50.1</ipaddr>
+    <subnet>24</subnet>
+  </opt9>
+  
+  <!-- ============================================== -->
+  <!-- SafeNet VLAN - VPN-Routed VLAN                 -->
+  <!-- VLAN 60 on igc0 trunk                          -->
+  <!-- All traffic policy-routed through WireGuard    -->
+  <!-- Alternative to dedicated physical port         -->
+  <!-- Promiscuous mode enabled for monitoring        -->
+  <!-- ============================================== -->
+  <opt10>
+    <if>vlan060</if>
+    <descr>SafeNetVLAN</descr>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+    <promisc>1</promisc>
+    <ipaddr>10.60.60.1</ipaddr>
+    <subnet>24</subnet>
+  </opt10>
+  
+  <!-- ============================================== -->
+  <!-- SafeNet Tunnel - WireGuard VPN Interface       -->
+  <!-- Virtual interface: wg1                         -->
+  <!-- Assigned interface for WireGuard tunnel        -->
+  <!-- Used as gateway for SafeNet policy routing     -->
+  <!-- ============================================== -->
+  <opt11>
+    <if>wg1</if>
+    <descr>SafeNet_Tunnel</descr>
+    <enable>1</enable>
+    <lock>1</lock>
+    <spoofmac/>
+  </opt11>
+  
+  <!-- ============================================== -->
+  <!-- WireGuard Group Interface                      -->
+  <!-- Auto-created group for all WireGuard tunnels   -->
+  <!-- ============================================== -->
+  <wireguard>
+    <internal_dynamic>1</internal_dynamic>
+    <descr>WireGuard (Group)</descr>
+    <if>wireguard</if>
+    <virtual>1</virtual>
+    <enable>1</enable>
+    <type>group</type>
+    <networks/>
+  </wireguard>
+</interfaces>

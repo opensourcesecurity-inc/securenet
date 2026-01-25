@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<!-- 
+  SecureNet OS - Gateways Excerpt
+  Source: OPNsense config.xml <OPNsense><Gateways> section
+  Purpose: Verification of published security architecture
+  
+  This is an excerpt for transparency. It cannot be directly imported.
+  See AIW (AI Whitepaper) for complete documentation.
+  https://github.com/opensourcesecurity-inc/aiw
+  
+  REDACTIONS APPLIED:
+  - WAN gateway IPs → [ISP_GATEWAY_REDACTED]
+  
+  GATEWAY ARCHITECTURE:
+  ====================
+  Gateways define exit points for traffic routing.
+  
+  WAN Gateway (auto-configured):
+    - Created automatically from DHCP lease
+    - Used as default gateway for non-SafeNet traffic
+    - Not shown here (dynamic, not in static config)
+  
+  SafeNet Gateway (manually configured):
+    - Name: SafeNet_GW
+    - Interface: opt11 (SafeNet_Tunnel / wg1)
+    - Gateway IP: 10.200.0.1 (VPN provider's tunnel endpoint)
+    - Used for policy-based routing of SafeNet traffic
+  
+  POLICY ROUTING:
+    Firewall rules reference SafeNet_GW to force traffic through VPN:
+    - SafeNetPort rules: gateway=SafeNet_GW
+    - SafeNetVLAN rules: gateway=SafeNet_GW
+    
+    This creates selective VPN routing where:
+    - Admin networks → WAN gateway (direct internet)
+    - Isolated VLANs → WAN gateway (direct internet)
+    - SafeNet interfaces → SafeNet_GW (VPN tunnel)
+  
+  GATEWAY SETTINGS:
+    - defaultgw=0: Not the default gateway (important!)
+    - fargw=1: Far gateway (not on same subnet as interface)
+    - monitor_disable=1: No gateway monitoring (VPN doesn't respond to probes)
+    - priority=255: Low priority for gateway failover
+-->
+
+<Gateways version="1.0.0" description="Gateways configuration">
+  <!-- ============================================== -->
+  <!-- SAFENET VPN GATEWAY                            -->
+  <!-- Used for policy-based routing through VPN      -->
+  <!-- ============================================== -->
+  <gateway_item uuid="99fd3101-69d6-4148-ba56-fb4fb83e3b48">
+    <!-- Gateway is active -->
+    <disabled>0</disabled>
+    
+    <!-- Gateway name - referenced in firewall rules -->
+    <n>SafeNet_GW</n>
+    <descr>SafeNet Gateway</descr>
+    
+    <!-- Interface: WireGuard tunnel -->
+    <interface>opt11</interface>
+    
+    <!-- IPv4 only -->
+    <ipprotocol>inet</ipprotocol>
+    
+    <!-- 
+      Gateway IP: VPN provider's internal tunnel address
+      This is the "other end" of the WireGuard tunnel
+      Traffic sent here exits through the VPN provider
+    -->
+    <gateway>10.200.0.1</gateway>
+    
+    <!-- 
+      CRITICAL: Not the default gateway
+      This allows selective routing - only SafeNet traffic uses this
+    -->
+    <defaultgw>0</defaultgw>
+    
+    <!-- 
+      Far gateway: The gateway IP is not on the same subnet
+      as the interface. This is normal for tunnel interfaces.
+    -->
+    <fargw>1</fargw>
+    
+    <!-- 
+      Gateway monitoring disabled
+      VPN endpoints typically don't respond to ICMP probes
+      Monitoring would cause false "down" alerts
+    -->
+    <monitor_disable>1</monitor_disable>
+    <monitor_noroute>0</monitor_noroute>
+    <monitor_killstates>0</monitor_killstates>
+    <monitor_killstates_priority>0</monitor_killstates_priority>
+    <monitor/>
+    
+    <!-- Don't force gateway down manually -->
+    <force_down>0</force_down>
+    
+    <!-- 
+      Priority 255 = lowest priority
+      If gateway groups were used, this would be last choice
+    -->
+    <priority>255</priority>
+    
+    <!-- Weight for load balancing (not used here) -->
+    <weight>1</weight>
+    
+    <!-- Latency/loss thresholds (not used - monitoring disabled) -->
+    <latencylow/>
+    <latencyhigh/>
+    <losslow/>
+    <losshigh/>
+    <interval/>
+    <time_period/>
+    <loss_interval/>
+    <data_length/>
+  </gateway_item>
+  
+  <!-- 
+    NOTE: WAN gateway not shown here
+    It's automatically created from DHCP and stored elsewhere in config.
+    The WAN gateway is used as the default route for all non-SafeNet traffic.
+  -->
+</Gateways>

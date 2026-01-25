@@ -1,0 +1,334 @@
+<?xml version="1.0"?>
+<!-- 
+  SecureNet OS - Monit Monitoring Excerpt
+  Source: OPNsense config.xml <OPNsense><monit> section
+  Purpose: Verification of published security architecture
+  
+  This is an excerpt for transparency. It cannot be directly imported.
+  See AIW (AI Whitepaper) for complete documentation.
+  https://github.com/opensourcesecurity-inc/aiw
+  
+  REDACTIONS APPLIED:
+  - Email addresses → [EMAIL_REDACTED]
+  - SMTP passwords → [SMTP_PASSWORD_REDACTED]
+  - SMTP usernames → [SMTP_USER_REDACTED]
+  
+  MONITORING ARCHITECTURE:
+  =======================
+  Monit provides system and service monitoring with email alerting.
+  
+  MONITORED ITEMS:
+    System Resources:
+      - $HOST: CPU, memory, load average monitoring
+      - RootFs: Disk space monitoring
+    
+    Services:
+      - Unbound_DNS: Process monitoring via PID file
+      - gateway_alert: Gateway status monitoring
+    
+    Network:
+      - Port1_Down_1hr: LAN1 interface link monitoring
+        Alert after 60 cycles (1 hour) of link failure
+  
+  ALERT THRESHOLDS:
+    - Memory usage > 90%
+    - CPU usage > 95% for 10 cycles
+    - Load average (1min) > 8
+    - Load average (5min) > 6
+    - Disk space usage > 90%
+    - Network link down for 60 cycles (1 hour)
+    - Gateway status change (non-zero exit)
+  
+  EMAIL ALERTING:
+    - SMTP via Gmail with TLS (port 587)
+    - Currently disabled (enabled=0) but configured
+-->
+
+<monit version="1.0.14">
+  <general>
+    <!-- Monitoring currently disabled - set to 1 to enable -->
+    <enabled>0</enabled>
+    <!-- Check interval in seconds -->
+    <interval>60</interval>
+    <!-- Delay before starting monitoring after boot -->
+    <startdelay>60</startdelay>
+    <!-- SMTP server for email alerts -->
+    <mailserver>smtp.gmail.com</mailserver>
+    <port>587</port>
+    <!-- SMTP credentials - REDACTED -->
+    <username>[SMTP_USER_REDACTED]</username>
+    <password>[SMTP_PASSWORD_REDACTED]</password>
+    <!-- TLS enabled for SMTP -->
+    <ssl>1</ssl>
+    <sslversion>auto</sslversion>
+    <sslverify>1</sslverify>
+    <logfile/>
+    <statefile/>
+    <eventqueuePath/>
+    <eventqueueSlots/>
+    <httpdEnabled>0</httpdEnabled>
+    <httpdUsername>root</httpdUsername>
+    <httpdPassword/>
+    <httpdPort>2812</httpdPort>
+    <httpdAllow/>
+    <mmonitUrl/>
+    <mmonitTimeout>5</mmonitTimeout>
+    <mmonitRegisterCredentials>1</mmonitRegisterCredentials>
+  </general>
+  
+  <!-- ============================================== -->
+  <!-- ALERT RECIPIENTS                               -->
+  <!-- ============================================== -->
+  <alert uuid="0d4ab912-350f-42a2-8a0f-233abb52d2d7">
+    <enabled>0</enabled>
+    <recipient>[EMAIL_REDACTED]</recipient>
+    <noton>0</noton>
+    <events/>
+    <format/>
+    <reminder/>
+    <description/>
+  </alert>
+  
+  <!-- ============================================== -->
+  <!-- MONITORED SERVICES                             -->
+  <!-- ============================================== -->
+  
+  <!-- System Resources (CPU, Memory, Load) -->
+  <service uuid="410ecc30-264e-41bc-87ab-9ebcef886e01">
+    <enabled>1</enabled>
+    <n>$HOST</n>
+    <description/>
+    <type>system</type>
+    <pidfile/>
+    <match/>
+    <path/>
+    <timeout>300</timeout>
+    <starttimeout>30</starttimeout>
+    <address/>
+    <interface/>
+    <start/>
+    <stop/>
+    <!-- Tests: MemoryUsage, CPUUsage, LoadAvg1, LoadAvg5 -->
+    <tests>41361173-a9ed-49f8-b0ff-8cdf3f200f89,096ef66c-4241-4163-a231-9c6310a57da7,0c794eaa-0f5e-4180-99db-67bda00af472,2d1b4e0a-2612-4fe2-b0fc-b1d121fc06ac</tests>
+    <depends/>
+    <polltime/>
+  </service>
+  
+  <!-- Root Filesystem Space -->
+  <service uuid="88e9fad7-772e-4d1e-b258-217345f8e194">
+    <enabled>1</enabled>
+    <n>RootFs</n>
+    <description/>
+    <type>filesystem</type>
+    <pidfile/>
+    <match/>
+    <path>/</path>
+    <timeout>300</timeout>
+    <starttimeout>30</starttimeout>
+    <address/>
+    <interface/>
+    <start/>
+    <stop/>
+    <!-- Test: SpaceUsage -->
+    <tests>f7826f84-ca3b-456d-aef9-0fc26194a529</tests>
+    <depends/>
+    <polltime/>
+  </service>
+  
+  <!-- CARP Status (disabled - no HA config) -->
+  <service uuid="b8f1a531-62fa-4188-b22c-c0806786f419">
+    <enabled>0</enabled>
+    <n>carp_status_change</n>
+    <description/>
+    <type>custom</type>
+    <pidfile/>
+    <match/>
+    <path>/usr/local/opnsense/scripts/monit/carp_status.php</path>
+    <timeout>300</timeout>
+    <starttimeout>30</starttimeout>
+    <address/>
+    <interface/>
+    <start/>
+    <stop/>
+    <tests>168018b5-1201-4194-b4e0-21b4d2222d27</tests>
+    <depends/>
+    <polltime/>
+  </service>
+  
+  <!-- Gateway Status Monitoring -->
+  <service uuid="5637e78c-8b7f-4078-a9c3-9f1e1a7f7558">
+    <enabled>1</enabled>
+    <n>gateway_alert</n>
+    <description/>
+    <type>custom</type>
+    <pidfile/>
+    <match/>
+    <path>/usr/local/opnsense/scripts/monit/gateway_alert.php</path>
+    <timeout>300</timeout>
+    <starttimeout>30</starttimeout>
+    <address/>
+    <interface/>
+    <start/>
+    <stop/>
+    <!-- Test: NonZeroStatus -->
+    <tests>9f1c24bd-f831-4c35-b60e-b1187763266c</tests>
+    <depends/>
+    <polltime/>
+  </service>
+  
+  <!-- 
+    Port 1 (LAN1) Link Down Detection
+    Alerts if LAN1 link is down for 1 hour (60 cycles × 60 seconds)
+    This detects physical connectivity issues to the main switch
+  -->
+  <service uuid="a2ccb878-5e5e-4554-9ff4-14c4284fc532">
+    <enabled>1</enabled>
+    <n>Port1_Down_1hr</n>
+    <description>Port1_Down_1hr</description>
+    <type>network</type>
+    <pidfile/>
+    <match/>
+    <path/>
+    <timeout>300</timeout>
+    <starttimeout>30</starttimeout>
+    <address/>
+    <!-- Monitoring LAN1 interface (opt3/igc0) -->
+    <interface>opt3</interface>
+    <start/>
+    <stop/>
+    <!-- Test: Link down for 60 cycles -->
+    <tests>1a55f4d0-9020-4a63-beb3-ed34b368767c</tests>
+    <depends/>
+    <polltime/>
+  </service>
+  
+  <!-- Unbound DNS Process Monitoring -->
+  <service uuid="35b9e759-f32e-4eac-b5b7-f5c4b88e44f0">
+    <enabled>1</enabled>
+    <n>Unbound_DNS</n>
+    <description>Unbound Monitoring</description>
+    <type>process</type>
+    <pidfile>/var/run/unbound.pid</pidfile>
+    <match/>
+    <path/>
+    <timeout>300</timeout>
+    <starttimeout>30</starttimeout>
+    <address/>
+    <interface/>
+    <start/>
+    <stop/>
+    <tests/>
+    <depends/>
+    <polltime/>
+  </service>
+  
+  <!-- ============================================== -->
+  <!-- TEST DEFINITIONS                               -->
+  <!-- ============================================== -->
+  
+  <test uuid="2a662ea5-330f-4fe2-98f6-9d5bf6562790">
+    <n>Ping</n>
+    <type>NetworkPing</type>
+    <condition>failed ping</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <test uuid="3e684d67-4e65-4696-83c1-bbebe99d301a">
+    <n>NetworkLink</n>
+    <type>NetworkInterface</type>
+    <condition>failed link</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <test uuid="01ffdc29-8dca-4035-9f3f-fac00ded9fdc">
+    <n>NetworkSaturation</n>
+    <type>NetworkInterface</type>
+    <condition>saturation is greater than 95%</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <!-- Alert if memory usage exceeds 90% -->
+  <test uuid="41361173-a9ed-49f8-b0ff-8cdf3f200f89">
+    <n>MemoryUsage</n>
+    <type>SystemResource</type>
+    <condition>memory usage is greater than 90%</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <!-- Alert if CPU usage exceeds 95% for 10 cycles (10 minutes) -->
+  <test uuid="096ef66c-4241-4163-a231-9c6310a57da7">
+    <n>CPUUsage</n>
+    <type>SystemResource</type>
+    <condition>cpu usage is greater than 95% for 10 cycles</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <!-- Alert if 1-minute load average exceeds 8 -->
+  <test uuid="0c794eaa-0f5e-4180-99db-67bda00af472">
+    <n>LoadAvg1</n>
+    <type>SystemResource</type>
+    <condition>loadavg (1min) is greater than 8</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <!-- Alert if 5-minute load average exceeds 6 -->
+  <test uuid="2d1b4e0a-2612-4fe2-b0fc-b1d121fc06ac">
+    <n>LoadAvg5</n>
+    <type>SystemResource</type>
+    <condition>loadavg (5min) is greater than 6</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <test uuid="38723dd2-0ae9-4c73-89b4-a15704a44301">
+    <n>LoadAvg15</n>
+    <type>SystemResource</type>
+    <condition>loadavg (15min) is greater than 4</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <!-- Alert if disk space usage exceeds 90% -->
+  <test uuid="f7826f84-ca3b-456d-aef9-0fc26194a529">
+    <n>SpaceUsage</n>
+    <type>SpaceUsage</type>
+    <condition>space usage is greater than 90%</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <test uuid="168018b5-1201-4194-b4e0-21b4d2222d27">
+    <n>ChangedStatus</n>
+    <type>ProgramStatus</type>
+    <condition>changed status</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <test uuid="9f1c24bd-f831-4c35-b60e-b1187763266c">
+    <n>NonZeroStatus</n>
+    <type>ProgramStatus</type>
+    <condition>status != 0</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+  
+  <!-- 
+    Port 1 (LAN1) link failure test
+    60 cycles at 60-second intervals = 1 hour before alerting
+    This prevents alert storms from brief link flaps
+  -->
+  <test uuid="1a55f4d0-9020-4a63-beb3-ed34b368767c">
+    <n>Port1_Down_1hr</n>
+    <type>NetworkInterface</type>
+    <condition>failed link for 60 cycles</condition>
+    <action>alert</action>
+    <path/>
+  </test>
+</monit>

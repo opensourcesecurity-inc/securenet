@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<!-- 
+  SecureNet OS - VLANs Excerpt
+  Source: OPNsense config.xml <vlans> section
+  Purpose: Verification of published security architecture
+  
+  This is an excerpt for transparency. It cannot be directly imported.
+  See AIW (AI Whitepaper) for complete documentation.
+  https://github.com/opensourcesecurity-inc/aiw
+  
+  VLAN ARCHITECTURE:
+  =================
+  All VLANs are configured on the igc0 physical interface (LAN1/trunk port).
+  This requires a managed switch capable of 802.1Q VLAN tagging.
+  
+  VLAN ID Assignments:
+    - VLAN 20: IoT devices (cameras, sensors, smart plugs)
+    - VLAN 30: Smart home (Apple TV, Sonos, Chromecast)
+    - VLAN 40: Guest network
+    - VLAN 50: Kids devices
+    - VLAN 60: SafeNet (VPN-routed traffic)
+  
+  PCP (Priority Code Point) Values:
+    - PCP 0: Best effort (default)
+    - PCP 1: Background
+    - PCP 4: Video (used for Smart VLAN)
+    - PCP 7: Network control (used for SafeNet - highest priority)
+  
+  SWITCH CONFIGURATION REQUIRED:
+    The managed switch must be configured with:
+    1. Port connected to igc0 as tagged trunk for VLANs 20,30,40,50,60
+    2. Access ports assigned to appropriate VLANs for endpoints
+    3. Native/untagged traffic goes to LAN1 (192.168.1.0/24)
+-->
+
+<vlans version="1.0.0">
+  <!-- ============================================== -->
+  <!-- IoT VLAN - Tag 20                              -->
+  <!-- Low-priority traffic (PCP 1 = Background)      -->
+  <!-- Used for cameras, sensors, smart plugs, etc.   -->
+  <!-- These devices often have poor security and     -->
+  <!-- should be isolated from trusted networks       -->
+  <!-- ============================================== -->
+  <vlan uuid="888bec1b-883d-4514-aa41-7521a9dfbb04">
+    <if>igc0</if>
+    <tag>20</tag>
+    <pcp>1</pcp>
+    <proto/>
+    <descr>IoT VLAN</descr>
+    <vlanif>vlan020</vlanif>
+  </vlan>
+  
+  <!-- ============================================== -->
+  <!-- Smart VLAN - Tag 30                            -->
+  <!-- Higher priority (PCP 4 = Video)                -->
+  <!-- Used for media devices: Apple TV, Sonos, etc.  -->
+  <!-- Needs good QoS for streaming                   -->
+  <!-- ============================================== -->
+  <vlan uuid="424bd804-9f06-421d-a296-e91d4ebefa73">
+    <if>igc0</if>
+    <tag>30</tag>
+    <pcp>4</pcp>
+    <proto/>
+    <descr>Smart VLAN</descr>
+    <vlanif>vlan030</vlanif>
+  </vlan>
+  
+  <!-- ============================================== -->
+  <!-- Guest VLAN - Tag 40                            -->
+  <!-- Low-priority traffic (PCP 1 = Background)      -->
+  <!-- Visitor/guest internet access                  -->
+  <!-- Completely isolated from internal networks     -->
+  <!-- ============================================== -->
+  <vlan uuid="64312857-74f4-4696-9059-0333efb9ddaf">
+    <if>igc0</if>
+    <tag>40</tag>
+    <pcp>1</pcp>
+    <proto/>
+    <descr>Guest VLAN</descr>
+    <vlanif>vlan040</vlanif>
+  </vlan>
+  
+  <!-- ============================================== -->
+  <!-- Kids VLAN - Tag 50                             -->
+  <!-- Best effort (PCP 0 = Default)                  -->
+  <!-- Children's devices                             -->
+  <!-- Can apply additional content filtering here    -->
+  <!-- ============================================== -->
+  <vlan uuid="a32a797e-a874-469d-a4c3-b4c3e78530e6">
+    <if>igc0</if>
+    <tag>50</tag>
+    <pcp>0</pcp>
+    <proto/>
+    <descr>Kids VLAN</descr>
+    <vlanif>vlan050</vlanif>
+  </vlan>
+  
+  <!-- ============================================== -->
+  <!-- SafeNet VLAN - Tag 60                          -->
+  <!-- Highest priority (PCP 7 = Network Control)     -->
+  <!-- All traffic routes through WireGuard VPN       -->
+  <!-- Alternative to dedicated physical SafeNetPort  -->
+  <!-- High priority ensures VPN traffic isn't        -->
+  <!-- deprioritized under load                       -->
+  <!-- ============================================== -->
+  <vlan uuid="02312f3e-56a3-4e52-9917-5d5973f6f187">
+    <if>igc0</if>
+    <tag>60</tag>
+    <pcp>7</pcp>
+    <proto/>
+    <descr>SafeNet VLAN</descr>
+    <vlanif>vlan060</vlanif>
+  </vlan>
+</vlans>

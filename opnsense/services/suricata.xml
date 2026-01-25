@@ -1,0 +1,324 @@
+<?xml version="1.0"?>
+<!-- 
+  SecureNet OS - Suricata IDS Excerpt
+  Source: OPNsense config.xml <OPNsense><IDS> section
+  Purpose: Verification of published security architecture
+  
+  This is an excerpt for transparency. It cannot be directly imported.
+  See AIW (AI Whitepaper) for complete documentation.
+  https://github.com/opensourcesecurity-inc/aiw
+  
+  IDS/IPS ARCHITECTURE:
+  ====================
+  Suricata provides network intrusion detection and prevention.
+  
+  MODE: IPS (Intrusion Prevention System)
+    - ips=1: Actively blocks detected threats
+    - promisc=1: Promiscuous mode for full traffic inspection
+  
+  INTERFACE: WAN only
+    - Monitors all inbound/outbound internet traffic
+    - Internal VLAN traffic not inspected (by design)
+  
+  HOME NETWORKS:
+    - 192.168.0.0/16 (all internal 192.168.x.x subnets)
+    - 10.0.0.0/8 (SafeNet and tunnel networks)
+    - 172.16.0.0/12 (reserved, not currently used)
+  
+  ENABLED RULESETS:
+    Threat Intelligence:
+      - abuse.ch.feodotracker.rules (Banking trojans)
+      - abuse.ch.sslblacklist.rules (Malicious SSL certs)
+      - abuse.ch.sslipblacklist.rules (Malicious SSL IPs)
+      - abuse.ch.threatfox.rules (IOCs)
+      - abuse.ch.urlhaus.rules (Malicious URLs)
+    
+    Emerging Threats:
+      - emerging-current_events.rules (Active campaigns)
+      - emerging-dos.rules (DoS attacks)
+      - emerging-exploit.rules (Exploit attempts)
+      - emerging-malware.rules (Malware signatures)
+      - emerging-phishing.rules (Phishing attempts)
+      - emerging-scan.rules (Port scans)
+      - emerging-worm.rules (Worm propagation)
+  
+  LOGGING:
+    - Syslog enabled for centralized logging
+    - Alert log rotation: Daily (D0)
+    - Alert logs retained: 4 days
+-->
+
+<IDS version="1.1.1">
+  <!-- ============================================== -->
+  <!-- INDIVIDUAL RULE OVERRIDES                      -->
+  <!-- These are specific rule SID customizations     -->
+  <!-- All set to alert (not drop) for visibility     -->
+  <!-- Full list contains ~45 specific SID overrides  -->
+  <!-- ============================================== -->
+  <rules>
+    <!-- Sample of rule overrides - many more in actual config -->
+    <rule>
+      <sid>2000005</sid>
+      <enabled>1</enabled>
+      <action>alert</action>
+    </rule>
+    <rule>
+      <sid>2000006</sid>
+      <enabled>1</enabled>
+      <action>alert</action>
+    </rule>
+    <!-- ... additional rule overrides omitted for brevity ... -->
+  </rules>
+  
+  <policies/>
+  <userDefinedRules/>
+  
+  <!-- ============================================== -->
+  <!-- RULESET FILES                                  -->
+  <!-- enabled=1 means ruleset is active              -->
+  <!-- ============================================== -->
+  <files>
+    <!-- ======== ABUSE.CH THREAT INTELLIGENCE ======== -->
+    
+    <!-- Feodo Tracker - Banking trojan C2 servers -->
+    <file>
+      <filename>abuse.ch.feodotracker.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- SSL Blacklist - Malicious SSL certificates -->
+    <file>
+      <filename>abuse.ch.sslblacklist.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- SSL IP Blacklist - IPs serving malicious certs -->
+    <file>
+      <filename>abuse.ch.sslipblacklist.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- ThreatFox - Indicators of Compromise -->
+    <file>
+      <filename>abuse.ch.threatfox.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- URLhaus - Malicious URLs -->
+    <file>
+      <filename>abuse.ch.urlhaus.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- ======== EMERGING THREATS - ENABLED ======== -->
+    
+    <!-- Current Events - Active attack campaigns -->
+    <file>
+      <filename>emerging-current_events.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- DoS - Denial of Service attacks -->
+    <file>
+      <filename>emerging-dos.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- Exploit - Vulnerability exploits -->
+    <file>
+      <filename>emerging-exploit.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- Malware - Known malware signatures -->
+    <file>
+      <filename>emerging-malware.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- Phishing - Phishing detection -->
+    <file>
+      <filename>emerging-phishing.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- Scan - Port scanning detection -->
+    <file>
+      <filename>emerging-scan.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- Worm - Worm propagation patterns -->
+    <file>
+      <filename>emerging-worm.rules</filename>
+      <enabled>1</enabled>
+    </file>
+    
+    <!-- ======== EMERGING THREATS - DISABLED ======== -->
+    <!-- These are available but not currently enabled -->
+    
+    <file>
+      <filename>emerging-activex.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-adware_pup.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-attack_response.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-chat.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-coinminer.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-dns.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-exploit_kit.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-ftp.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-games.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-hunting.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-icmp.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-inappropriate.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-info.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-mobile_malware.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-netbios.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-p2p.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-policy.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-web_client.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>emerging-web_server.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    
+    <!-- ======== OTHER SOURCES - DISABLED ======== -->
+    
+    <file>
+      <filename>3coresec.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>botcc.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>drop.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>dshield.rules</filename>
+      <enabled>0</enabled>
+    </file>
+    <file>
+      <filename>tor.rules</filename>
+      <enabled>0</enabled>
+    </file>
+  </files>
+  
+  <fileTags/>
+  
+  <!-- ============================================== -->
+  <!-- GENERAL IDS/IPS SETTINGS                       -->
+  <!-- ============================================== -->
+  <general>
+    <!-- IDS engine enabled -->
+    <enabled>1</enabled>
+    
+    <!-- IPS mode enabled - actively blocks threats -->
+    <ips>1</ips>
+    
+    <!-- Promiscuous mode - see all traffic on interface -->
+    <promisc>1</promisc>
+    
+    <!-- Monitor WAN interface only -->
+    <interfaces>wan</interfaces>
+    
+    <!-- 
+      HOME_NET definition - what Suricata considers "internal"
+      Used for directional rules (inbound vs outbound)
+    -->
+    <homenet>192.168.0.0/16,10.0.0.0/8,172.16.0.0/12</homenet>
+    
+    <defaultPacketSize/>
+    <UpdateCron>05b9ad54-72a6-4e37-92f1-3f28269bce96</UpdateCron>
+    
+    <!-- Alert log rotation: Daily -->
+    <AlertLogrotate>D0</AlertLogrotate>
+    
+    <!-- Keep 4 days of alert logs -->
+    <AlertSaveLogs>4</AlertSaveLogs>
+    
+    <!-- Hyperscan pattern matching (fast) -->
+    <MPMAlgo>hs</MPMAlgo>
+    
+    <detect>
+      <Profile/>
+      <toclient_groups/>
+      <toserver_groups/>
+    </detect>
+    
+    <!-- Syslog enabled for centralized logging -->
+    <syslog>1</syslog>
+    <syslog_eve>0</syslog_eve>
+    
+    <LogPayload>0</LogPayload>
+    <verbosity/>
+    
+    <eveLog>
+      <http>
+        <enable>0</enable>
+        <extended>0</extended>
+        <dumpAllHeaders/>
+      </http>
+      <tls>
+        <enable>0</enable>
+        <extended>0</extended>
+        <sessionResumption>0</sessionResumption>
+        <custom/>
+      </tls>
+    </eveLog>
+  </general>
+</IDS>
