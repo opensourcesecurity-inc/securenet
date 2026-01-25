@@ -20,12 +20,12 @@ The access point is configured with 6 SSIDs mapped to VLANs:
 
 | SSID | VLAN | Network | Purpose |
 |------|------|---------|---------|
-| Home-Admin | Native (untagged) | 192.168.1.0/24 | Primary trusted devices |
-| Home-IoT | 20 | 192.168.20.0/24 | Cameras, sensors, smart plugs |
-| Home-Smart | 30 | 192.168.30.0/24 | TVs, speakers, media devices |
-| Home-Guest | 40 | 192.168.40.0/24 | Visitor WiFi |
-| Home-Kids | 50 | 192.168.50.0/24 | Children's devices |
-| Home-SafeNet | 60 | 10.60.60.0/24 | VPN-tunneled traffic |
+| OSS-Home | Native (untagged) | 192.168.1.0/24 | Primary trusted devices |
+| OSS-IoT | 20 | 192.168.20.0/24 | Cameras, sensors, smart plugs |
+| OSS-Smart | 30 | 192.168.30.0/24 | TVs, speakers, media devices |
+| OSS-Guest | 40 | 192.168.40.0/24 | Visitor WiFi |
+| OSS-Kids | 50 | 192.168.50.0/24 | Children's devices |
+| OSS-SafeNet | 60 | 10.60.60.0/24 | VPN-tunneled traffic |
 
 ### Security Settings
 
